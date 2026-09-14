@@ -6,6 +6,8 @@ workflows:
     environment:
       android_signing:
         - paliaapk-release
+      vars:
+        GRADLE_VERSION: 9.3.1
     scripts:
       - name: Set Android SDK location
         script: |
@@ -13,6 +15,6 @@ workflows:
       - name: Build signed release APK
         script: |
           chmod +x ./gradlew
-          ./gradlew clean assembleRelease
+          ./gradlew clean assembleRelease --no-daemon
     artifacts:
       - app/build/outputs/apk/release/*.apk
