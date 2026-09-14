@@ -12,6 +12,7 @@ workflows:
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
       - name: Build signed release APK
         script: |
+          chmod +x ./gradlew
           ./gradlew clean assembleRelease
     artifacts:
       - app/build/outputs/apk/release/*.apk
