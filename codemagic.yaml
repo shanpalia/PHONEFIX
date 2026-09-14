@@ -1,0 +1,17 @@
+workflows:
+  phonefix-android:
+    name: PHONEFIX Android Signed APK
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      android_signing:
+        - paliaapk-release
+    scripts:
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+      - name: Build signed release APK
+        script: |
+          ./gradlew clean assembleRelease
+    artifacts:
+      - app/build/outputs/apk/release/*.apk
