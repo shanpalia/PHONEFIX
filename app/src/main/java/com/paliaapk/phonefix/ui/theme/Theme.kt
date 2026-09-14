@@ -62,17 +62,17 @@ fun PhoneFixTheme(
     content: @Composable () -> Unit
 ) {
     // We emphasize the sleek dark navy & cyan diagnostic tech aesthetic by default
-    val colorScheme = if (darkTheme) DarkColorScheme else DarkColorScheme // High-tech dark identity requested
+    val colorScheme = LightColorScheme
 
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window
             if (window != null) {
-                window.statusBarColor = BrandNavyDark.toArgb()
-                window.navigationBarColor = BrandNavyDark.toArgb()
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+                window.statusBarColor = Color.White.toArgb()
+                window.navigationBarColor = Color.White.toArgb()
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = true
             }
         }
     }

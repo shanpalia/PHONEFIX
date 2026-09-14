@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -51,6 +52,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,6 +71,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paliaapk.phonefix.BuildConfig
 import com.paliaapk.phonefix.R
 import com.paliaapk.phonefix.model.DiagnosticResult
 import com.paliaapk.phonefix.model.DiagnosticSeverity
@@ -91,15 +95,21 @@ import com.paliaapk.phonefix.ui.theme.StatusExcellent
 import com.paliaapk.phonefix.ui.theme.StatusGood
 import com.paliaapk.phonefix.ui.theme.StatusNeutral
 import com.paliaapk.phonefix.viewmodel.AppScreen
+import com.paliaapk.phonefix.util.UpdateChecker
 
 @Composable
 fun PhoneFixTopBar(
     onNavigate: (AppScreen) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var showProDialog by remember { mutableStateOf(false) }
     var showNotificationDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var updateMessage by remember { mutableStateOf<String?>(null) }
+    var updateAvailable by remember { mutableStateOf(false) }
+    var checkingUpdate by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Row(
         modifier = modifier
@@ -279,6 +289,55 @@ fun PhoneFixTopBar(
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedButton(
                         onClick = {
+                            checkingUpdate = true
+                            updateMessage = null
+                            scope.launch {
+                                val result = UpdateChecker.check(BuildConfig.VERSION_NAME)
+                                checkingUpdate = false
+                                updateAvailable = result.updateAvailable
+                                updateMessage = result.message
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !checkingUpdate
+                    ) {
+                        Icon(Icons.Default.SystemUpdate, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (checkingUpdate) "Checking..." else "Check for Update", color = BrandBlue)
+                    }
+                    updateMessage?.let { message ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Surface(
+                            color = if (updateAvailable) StatusAttention.copy(alpha = 0.12f) else StatusExcellent.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(message, color = if (updateAvailable) StatusAttention else StatusExcellent, fontSize = 12.sp)
+                                if (updateAvailable) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    TextButton(onClick = { UpdateChecker.openWebsite(context = context) }) {
+                                        Text("Open PaliaAPK Website", color = BrandBlue)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = {
+                            showSettingsDialog = false
+                            onNavigate(AppScreen.TOOLS)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("System Check & Settings", color = BrandBlue)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = {
                             showSettingsDialog = false
                             onNavigate(AppScreen.PRIVACY)
                         },
@@ -392,12 +451,13 @@ fun HealthScoreDial(
     modifier: Modifier = Modifier
 ) {
     val animatedProgress by animateFloatAsState(
-        targetValue = score / 100f,
+        targetValue = if (score >= 0) score / 100f else 0f,
         animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
         label = "scoreDial"
     )
 
     val scoreColor = when {
+        score < 0 -> StatusNeutral
         score >= 90 -> StatusExcellent
         score >= 75 -> StatusGood
         score >= 50 -> StatusAttention
@@ -427,7 +487,7 @@ fun HealthScoreDial(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "$score",
+                text = if (score >= 0) "$score" else "--",
                 fontSize = 38.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = BrandWhite,

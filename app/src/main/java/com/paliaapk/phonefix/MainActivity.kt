@@ -1,14 +1,19 @@
 package com.paliaapk.phonefix
 
+import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -35,6 +40,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        window.setStatusBarColor(android.graphics.Color.WHITE)
+        window.setNavigationBarColor(android.graphics.Color.WHITE)
+        androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).hide(
+            androidx.core.view.WindowInsetsCompat.Type.statusBars()
+        )
         setContent {
             PhoneFixTheme {
                 val viewModel: PhoneFixViewModel = viewModel()
@@ -46,6 +56,23 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PhoneFixApp(viewModel: PhoneFixViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { }
+    LaunchedEffect(Unit) {
+        val prefs = context.getSharedPreferences("phonefix_preferences", android.content.Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("initial_permissions_prompted", false)) {
+            prefs.edit().putBoolean("initial_permissions_prompted", true).apply()
+            val requested = listOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ).filter { androidx.core.content.ContextCompat.checkSelfPermission(context, it) != android.content.pm.PackageManager.PERMISSION_GRANTED }
+            if (requested.isNotEmpty()) permissionLauncher.launch(requested.toTypedArray())
+        }
+    }
     val currentScreen by viewModel.currentScreen.collectAsState()
     val systemInfo by viewModel.systemInfo.collectAsState()
     val isScanning by viewModel.isScanning.collectAsState()

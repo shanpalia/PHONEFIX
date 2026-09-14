@@ -111,12 +111,12 @@ fun HomeScreen(
     val diagnosticCards = listOf(
         DiagnosticCardItem("Device Info", "${systemInfo.manufacturer} ${systemInfo.deviceModel}", Icons.Default.PhoneAndroid, BrandCyan, AppScreen.TOOLS),
         DiagnosticCardItem("Hardware Test", "17 Interactive Tests", Icons.Default.Handyman, BrandBlue, AppScreen.HARDWARE_TEST),
-        DiagnosticCardItem("Storage Cleaner", "${100 - systemInfo.storageUsedPercent}% free space", Icons.Default.CleaningServices, BrandCyanLight, AppScreen.TOOLS),
+        DiagnosticCardItem("Storage Cleaner", if (systemInfo.totalStorageBytes > 0) "${100 - systemInfo.storageUsedPercent}% free space" else "Not scanned yet", Icons.Default.CleaningServices, BrandCyanLight, AppScreen.TOOLS),
         DiagnosticCardItem("Boost Performance", "Safe memory & CPU options", Icons.Default.Bolt, Color(0xFFF59E0B), AppScreen.TOOLS),
-        DiagnosticCardItem("Battery Health", "${systemInfo.batteryPct}% • ${systemInfo.chargePlug}", Icons.Default.BatteryChargingFull, StatusExcellent, AppScreen.TOOLS),
+        DiagnosticCardItem("Battery Health", if (systemInfo.batteryPct >= 0) "${systemInfo.batteryPct}% • ${systemInfo.chargePlug}" else "Not scanned yet", Icons.Default.BatteryChargingFull, StatusExcellent, AppScreen.TOOLS),
         DiagnosticCardItem("Network & Wi-Fi", if (systemInfo.isWifiConnected) "Connected" else "Cellular / Idle", Icons.Default.NetworkCheck, BrandCyanDark, AppScreen.TOOLS),
-        DiagnosticCardItem("Security Check", "Patch ${systemInfo.securityPatch}", Icons.Default.Security, Color(0xFF10B981), AppScreen.TOOLS),
-        DiagnosticCardItem("System Settings", "Android ${systemInfo.androidVersion} Settings", Icons.Default.Settings, Color(0xFF818CF8), AppScreen.TOOLS),
+        DiagnosticCardItem("Security Check", if (systemInfo.securityPatch.isNotBlank()) "Patch ${systemInfo.securityPatch}" else "Not scanned yet", Icons.Default.Security, Color(0xFF10B981), AppScreen.TOOLS),
+        DiagnosticCardItem("System Settings", if (systemInfo.androidVersion.isNotBlank()) "Android ${systemInfo.androidVersion} Settings" else "Not scanned yet", Icons.Default.Settings, Color(0xFF818CF8), AppScreen.TOOLS),
         DiagnosticCardItem("Apps Manager", "Inspect installed applications", Icons.Default.AppShortcut, Color(0xFFEC4899), AppScreen.APPS_MANAGER),
         DiagnosticCardItem("Display & AOD", "Screen & Wake Diagnostic", Icons.Default.Tv, BrandCyan, AppScreen.DISPLAY_AOD),
         DiagnosticCardItem("Fix Problems", "Safe guided solutions", Icons.Default.BugReport, StatusCritical, AppScreen.FIX_PROBLEMS),
@@ -207,19 +207,19 @@ fun HomeScreen(
                             ) {
                                 MetricChip(
                                     label = "RAM Status",
-                                    value = "${systemInfo.ramUsedPercent}% Used",
+                                    value = if (systemInfo.totalRamBytes > 0) "${systemInfo.ramUsedPercent}% Used" else "Not scanned",
                                     icon = Icons.Default.Memory,
                                     accentColor = BrandCyan
                                 )
                                 MetricChip(
                                     label = "Storage",
-                                    value = "${systemInfo.storageUsedPercent}% Used",
+                                    value = if (systemInfo.totalStorageBytes > 0) "${systemInfo.storageUsedPercent}% Used" else "Not scanned",
                                     icon = Icons.Default.Folder,
                                     accentColor = BrandCyanLight
                                 )
                                 MetricChip(
                                     label = "Battery",
-                                    value = "${systemInfo.batteryPct}% (${if (systemInfo.isCharging) "Charging" else "Unplugged"})",
+                                    value = if (systemInfo.batteryPct >= 0) "${systemInfo.batteryPct}% (${if (systemInfo.isCharging) "Charging" else "Unplugged"})" else "Not scanned",
                                     icon = Icons.Default.BatteryChargingFull,
                                     accentColor = StatusExcellent
                                 )
@@ -234,12 +234,12 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "🌡️ Temp: ${"%.1f".format(systemInfo.batteryTempC)}°C",
+                                text = if (systemInfo.batteryTempC > 0f) "🌡️ Temp: ${"%.1f".format(systemInfo.batteryTempC)}°C" else "🌡️ Temp: --",
                                 fontSize = 11.sp,
                                 color = BrandTextSecondary
                             )
                             Text(
-                                text = "🤖 Android ${systemInfo.androidVersion} (API ${systemInfo.apiLevel})",
+                                text = if (systemInfo.androidVersion.isNotBlank()) "🤖 Android ${systemInfo.androidVersion} (API ${systemInfo.apiLevel})" else "🤖 Android --",
                                 fontSize = 11.sp,
                                 color = BrandTextSecondary
                             )

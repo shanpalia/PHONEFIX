@@ -100,13 +100,13 @@ class PhoneFixViewModel(application: Application) : AndroidViewModel(application
     // Health Score
     private val _healthScoreReport = MutableStateFlow(
         HealthScoreReport(
-            overallScore = 95,
-            ratingLabel = "Good Condition",
-            validChecksCount = 4,
-            passedCount = 4,
+            overallScore = -1,
+            ratingLabel = "Not Scanned",
+            validChecksCount = 0,
+            passedCount = 0,
             attentionCount = 0,
             failedCount = 0,
-            explanation = "Initial baseline telemetry based on accessible hardware parameters."
+            explanation = "Run Full System Scan to calculate your phone health score."
         )
     )
     val healthScoreReport: StateFlow<HealthScoreReport> = _healthScoreReport.asStateFlow()
@@ -135,10 +135,7 @@ class PhoneFixViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch(Dispatchers.IO) {
             val info = systemDiagnostic.gatherSystemInfo(getApplication())
             _systemInfo.value = info
-            if (_allResults.value.isEmpty()) {
-                val initialScore = scoreCalculator.calculateScore(emptyList(), info)
-                _healthScoreReport.value = initialScore
-            }
+
         }
     }
 
